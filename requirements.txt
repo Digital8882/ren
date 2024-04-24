@@ -1,0 +1,7 @@
+gunicorn
+flask
+requests
+langchain_anthropic
+crewai
+python-dotenv
+langchain_community
