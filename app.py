@@ -9,6 +9,16 @@ load_dotenv()  # Load environment variables from .env file
 
 app = Flask(__name__)
 
+# Root route
+@app.route('/')
+def index():
+    return 'Hello, World!'
+
+# Add the root route for https://ren-1-etbr.onrender.com
+@app.route('/ren-1-etbr.onrender.com', methods=['GET'])
+def render_root():
+    return 'This is the root route for https://ren-1-etbr.onrender.com'
+
 # Airtable configuration
 AIRTABLE_API_KEY = os.getenv('AIRTABLE_API_KEY')
 AIRTABLE_BASE_ID = 'appPcWNUeei7MNMCj'
