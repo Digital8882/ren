@@ -4,7 +4,6 @@ from langchain_anthropic import ChatAnthropic
 from crewai import Crew, Process, Agent, Task
 from dotenv import load_dotenv
 import os
-from langsmith.wrappers import wrap_openai
 from langsmith import traceable
 
 load_dotenv()  # Load environment variables from .env file
@@ -19,8 +18,8 @@ AIRTABLE_FIELD_ID = 'fldgHGVaxSj1irPpF'
 
 ANTHROPIC_API_KEY = os.getenv('ANTHROPIC_API_KEY')
 
-# Auto-trace LLM calls in-context
-client = wrap_openai(ChatAnthropic(model="claude-3-sonnet-20240229", max_tokens=4069, api_key=ANTHROPIC_API_KEY))
+# Use the ChatAnthropic instance directly
+client = ChatAnthropic(model="claude-3-sonnet-20240229", max_tokens=4069, api_key=ANTHROPIC_API_KEY)
 
 Nutritionist = Agent(
     role='Nutritionist',
