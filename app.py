@@ -5,14 +5,16 @@ from crewai import Crew, Process, Agent, Task
 from dotenv import load_dotenv
 import os
 import logging
+from langsmith import Langsmith
 
 load_dotenv()  # Load environment variables from .env file
 
 app = Flask(__name__)
 
-# Configure logging
-logging.basicConfig(level=logging.INFO)
-logger = logging.getLogger(__name__)
+# Configure Langsmith
+LANGSMITH_API_KEY = os.getenv('LANGSMITH_API_KEY')
+langsmith = Langsmith(LANGSMITH_API_KEY)
+logger = langsmith.get_logger(__name__)
 
 # Airtable configuration
 AIRTABLE_API_KEY = os.getenv('AIRTABLE_API_KEY')
