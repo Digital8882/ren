@@ -4,17 +4,12 @@ from langchain_anthropic import ChatAnthropic
 from crewai import Crew, Process, Agent, Task
 from dotenv import load_dotenv
 import os
-import logging
-from langsmith import Langsmith
+from langsmith.wrappers import wrap_openai
+from langsmith import traceable
 
 load_dotenv()  # Load environment variables from .env file
 
 app = Flask(__name__)
-
-# Configure Langsmith
-LANGSMITH_API_KEY = os.getenv('LANGSMITH_API_KEY')
-langsmith = Langsmith(LANGSMITH_API_KEY)
-logger = langsmith.get_logger(__name__)
 
 # Airtable configuration
 AIRTABLE_API_KEY = os.getenv('AIRTABLE_API_KEY')
@@ -24,6 +19,9 @@ AIRTABLE_FIELD_ID = 'fldgHGVaxSj1irPpF'
 
 ANTHROPIC_API_KEY = os.getenv('ANTHROPIC_API_KEY')
 
+# Auto-trace LLM calls in-context
+client = wrap_openai(ChatAnthropic(model="claude-3-sonnet-20240229", max_tokens=4069, api_key=ANTHROPIC_API_KEY))
+
 Nutritionist = Agent(
     role='Nutritionist',
     goal=f'prescribe healthy meal plan',
@@ -31,7 +29,7 @@ Nutritionist = Agent(
     verbose=False,
     allow_delegation=True,
     max_rpm=5,
-    llm=ChatAnthropic(model="claude-3-sonnet-20240229", max_tokens=4069, api_key=ANTHROPIC_API_KEY)
+    llm=client
 )
 
 diet_task = Task(
@@ -46,22 +44,17 @@ def root():
     return "Welcome to the Flask application!"
 
 @app.route('/run_task', methods=['GET'])
+@traceable  # Auto-trace this function
 def run_task():
-    logger.info("Received request to run CrewAI task")
-
     project_crew = Crew(
         tasks=[diet_task],
         agents=[Nutritionist],
-        manager_llm=ChatAnthropic(temperature=1, model="claude-3-sonnet-20240229", max_tokens=4069),
+        manager_llm=client,
         max_rpm=4,
         process=Process.hierarchical
     )
 
-    logger.info("Starting CrewAI task execution")
     result = project_crew.kickoff()
-    logger.info("CrewAI task execution completed")
-
-    logger.info(f"Result: {result}")
 
     # Send the output data to Airtable
     send_to_airtable({'result': result})
@@ -87,4 +80,4 @@ def send_to_airtable(data):
     response.raise_for_status()
 
 if __name__ == '__main__':
-    app.run()
+    app.run(host='0.0.0.0', port=int(os.environ.get('PORT', 10000)))
