@@ -5,3 +5,4 @@ langchain_anthropic
 crewai
 python-dotenv
 langchain_community
+langsmith
